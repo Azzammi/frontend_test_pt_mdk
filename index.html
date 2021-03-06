@@ -99,6 +99,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
         new Vue({
             el: '#dw',
@@ -120,7 +121,11 @@
                 search: '',
                 results: [],
                 isOpen: false
-            }},/*
+            }},
+            created: function() {
+                this.getNames()                
+            },
+            /*
             data(){
                 return {
                     search: '',
@@ -129,6 +134,44 @@
                 };
             },*/
             methods: {
+                getNames(){
+                    axios.get('https://floating-beyond-43009.herokuapp.com/api/username')
+                        .then(res => {
+                            let data = res.data
+                            this.items = []
+                            for(let i = 0; i < data.length; i++){
+                                this.items.push(data[i]['name'])
+                            }
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                },
+                registerUser(){
+                    axios.get('https://floating-beyond-43009.herokuapp.com/api/registerUser',{
+                            name: this.name,
+                            email: this.email,
+                            password: this.password                            
+                        })
+                        .then(res => {
+                            resetForm()
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                },
+                login(){
+                    axios.get('https://floating-beyond-43009.herokuapp.com/api/login',{                            
+                            email: this.email,
+                            password: this.password                            
+                        })
+                        .then(res => {
+                            resetForm()
+                        })
+                        .catch(err => {
+                            console.log(err)
+                        })
+                },
                 resetForm(){
                     this.name = ''
                     this.email = ''
@@ -139,7 +182,6 @@
                     this.filterResults()
                 },
                 filterResults(){
-                    console.log(this.items)
                     this.results = this.items.filter(item => item.toLowerCase().indexOf(this.search.toLowerCase()) > -1);
                 },
                 setResult(result){
