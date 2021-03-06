@@ -69,7 +69,7 @@
                                 <div class="autocomplete">
                                     <input type="text" class="form-control" v-model="search" @input="onChange">
                                     <ul v-show="isOpen" class="autocomplete-results">
-                                        <li v-for="(result, i) in results" :key="i" @click="setResult(result)" class="autocomplete-result">{{ result }}</li>
+                                        <li v-for="(result, i) in results" :key="i" @click="setResult(result)"  class="autocomplete-result">{{ result }}</li>
                                     </ul>
                                 </div>                                
                             </template>
@@ -102,18 +102,49 @@
     <script>
         new Vue({
             el: '#dw',
-            data: {
+            name: 'autocomplete',
+            props: {
+                items: {
+                    type: Array,
+                    required: false,
+                    default: () => [ 'Apple', 'Banana', 'Orange', 'Mango', 'Pear', 'Peach', 'Grape', 'Tangerine', 'Pineapple'],
+                },
+            },
+            data() { 
+                return {
                 type: '',
                 name: '',
                 email: '',
                 password: '',
                 search_username: '',
-            },
+                search: '',
+                results: [],
+                isOpen: false
+            }},/*
+            data(){
+                return {
+                    search: '',
+                    results: [],
+                    isOpen: false
+                };
+            },*/
             methods: {
                 resetForm(){
                     this.name = ''
                     this.email = ''
                     this.password = ''
+                },
+                onChange(){
+                    this.isOpen = true
+                    this.filterResults()
+                },
+                filterResults(){
+                    console.log(this.items)
+                    this.results = this.items.filter(item => item.toLowerCase().indexOf(this.search.toLowerCase()) > -1);
+                },
+                setResult(result){
+                    this.search = result
+                    this.isOpen = false
                 }
             },
             computed: {
@@ -151,37 +182,7 @@
                     return false;
                 }
             }            
-        });
-        export default {
-            name: 'autocomplete',
-            props: {
-                items: {
-                    type: Array,
-                    required: false,
-                    default: () => [],
-                }
-            },
-            data(){
-                return {
-                    search: '',
-                    results: [],
-                    isOpen: false
-                };
-            },
-            methods: {
-                onChange(){
-                    this.isOpen = true,
-                    this.filterResults();
-                },
-                filterResults(){
-                    this.results = this.items.filter(item => item.toLowerCase().indexOf(this.search.toLowerCase()) > -1);
-                },
-                setResult(result){
-                    this.search = result
-                    this.isOpen = false
-                }
-            }
-        }
+        })        
     </script>
 </body>
 </html>
