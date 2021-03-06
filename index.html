@@ -56,39 +56,43 @@
                 <div class="card">
                   <div class="card-header">{{ changeTitle }}</div>
                   <div class="card-body">
+                    <form autocomplete="off">                    
                       <div v-if="type == 0">
                           <div class="form-group">
-                              <label for="">Nama Lengkap</label>
-                              <input type="text" class="form-control" :class="{'is-invalid' : valName }" v-model="name">
+                              <label for="">Nama</label>
+                              <input type="text" class="form-control" :class="{'is-invalid' : valName }" v-model="name" v-on:keypress="isLetter($event)">
+                              <p v-if="valName" class="error-message">The name is required</p>
                           </div>
-                      </div>
+                      </div>                      
+                      <div v-if="type == 0 || type == 1">
+                        <div class="form-group">
+                            <label for="">Email</label>
+                            <input type="email" class="form-control" :class="{'is-invalid' : valEmail }" v-model="email">
+                            <p v-if="valEmail" class="error-message">The Email is not right formats</p>
+                         </div>
+                         <div class="form-group">
+                            <label for="">Password</label>
+                            <input type="password" class="form-control" :class="{'is-invalid' : valPass }" v-model="password">
+                            <p v-if="valPass" class="error-message">The password is required</p>
+                         </div>
+                         <div class="form-group">
+                            <button class="btn btn-primary btn-sm"  @click="save">{{ changeTitle }}</button>
+                        </div>
+                      </div>  
+                    </form>
                       <div v-if="type == 2">
                         <div class="form-group">
-                            <label for="search_username">Search Username</label>
+                            <label for="search_username">Search Name</label>
                             <template>
                                 <div class="autocomplete">
-                                    <input type="text" class="form-control" v-model="search" @input="onChange">
+                                    <input type="text" class="form-control" v-model="search" @input="onChange" v-on:keypress="isLetter($event)">
                                     <ul v-show="isOpen" class="autocomplete-results">
                                         <li v-for="(result, i) in results" :key="i" @click="setResult(result)"  class="autocomplete-result">{{ result }}</li>
                                     </ul>
                                 </div>                                
-                            </template>
-                            
+                            </template>                            
                         </div>
-                      </div>
-                      <div v-if="type == 1 || type == 0">
-                        <div class="form-group">
-                            <label for="">Email</label>
-                            <input type="email" class="form-control" :class="{'is-invalid' : valEmail }" v-model="email">
-                         </div>
-                         <div class="form-group">
-                            <label for="">Password</label>
-                            <input type="password" class="form-control" class="{'is-invalid' : valPass }" v-model="password">
-                         </div>
-                      </div>                      
-                      <div class="form-group">
-                          <button class="btn btn-primary btn-sm">{{ changeTitle }}</button>
-                      </div>
+                      </div>               
                    </div>
                 </div>
               </div>
@@ -124,16 +128,11 @@
             }},
             created: function() {
                 this.getNames()                
-            },
-            /*
-            data(){
-                return {
-                    search: '',
-                    results: [],
-                    isOpen: false
-                };
-            },*/
+            },            
             methods: {
+                save(){
+                    this.type == 0  ? this.registerUser() : this.login()
+                },
                 getNames(){
                     axios.get('https://floating-beyond-43009.herokuapp.com/api/username')
                         .then(res => {
@@ -148,25 +147,26 @@
                         })
                 },
                 registerUser(){
-                    axios.get('https://floating-beyond-43009.herokuapp.com/api/registerUser',{
+                    axios.post('https://floating-beyond-43009.herokuapp.com/api/registerUser',{
                             name: this.name,
                             email: this.email,
                             password: this.password                            
                         })
                         .then(res => {
-                            resetForm()
+                            this.resetForm()
+                            this.type = 1
                         })
                         .catch(err => {
                             console.log(err)
                         })
                 },
                 login(){
-                    axios.get('https://floating-beyond-43009.herokuapp.com/api/login',{                            
+                    axios.post('https://floating-beyond-43009.herokuapp.com/api/login',{                            
                             email: this.email,
                             password: this.password                            
                         })
                         .then(res => {
-                            resetForm()
+                            this.resetForm()
                         })
                         .catch(err => {
                             console.log(err)
@@ -187,6 +187,11 @@
                 setResult(result){
                     this.search = result
                     this.isOpen = false
+                },
+                isLetter(e) {
+                    let char = String.fromCharCode(e.keyCode); // Get the character
+                    if(/^[A-Za-z]+$/.test(char)) return true; // Match with regex 
+                    else e.preventDefault(); // If not match, don't add to input text
                 }
             },
             computed: {
@@ -205,6 +210,7 @@
                     return title
                 },
                 valName(){
+                    var re = /^[a-zA-Z0-9@]+$/;
                     if(this.name.length === 0 || this.name.length > 50){
                         return true;
                     }
