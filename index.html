@@ -37,18 +37,15 @@
     <div class="container" id="dw">
         <div class="row" style="padding-top: 20px">
             <div class="col-md-3">
-                <div class="card">
+                <div class="card" v-if="isLoggedIn == false">
                     <div class="card-header">Select Form</div>
                     <div class="card-body">
                         <div class="form-group">
-                            <input type="radio"  value="0" v-model="type"> Daftar
+                            <input type="radio"  value="0" v-model="type" @click="error = false"> Daftar
                         </div>
                         <div class="form-group">
-                            <input type="radio" v-model="type" value="1" > Login
-                        </div>
-                        <div class="form-group">
-                            <input type="radio" v-model="type" value="2" > Username Search
-                        </div>
+                            <input type="radio" v-model="type" value="1" @click="error = false"> Login
+                        </div>                        
                     </div>
                 </div>
             </div>
@@ -56,32 +53,34 @@
                 <div class="card">
                   <div class="card-header">{{ changeTitle }}</div>
                   <div class="card-body">
-                      <div v-if="type == 0">
-                          <div class="form-group">
-                              <label for="">Nama</label>
-                              <input type="text" class="form-control" :class="{'is-invalid' : valName }" v-model="name" v-on:keypress="isLetter($event)">
-                              <p v-if="valName" class="error-message">The name is required</p>
-                          </div>
-                      </div>                      
-                      <div v-if="type == 0 || type == 1">
-                        <div class="form-group">
-                            <label for="">Email</label>
-                            <input type="email" class="form-control" :class="{'is-invalid' : valEmail }" v-model="email">
-                            <p v-if="valEmail" class="error-message">The Email is not right formats</p>
-                         </div>
-                         <div class="form-group">
-                            <label for="">Password</label>
-                            <input type="password" class="form-control" :class="{'is-invalid' : valPass }" v-model="password">
-                            <p v-if="valPass" class="error-message">The password is required, minimum 8 character</p>
-                         </div>
-                         <div class="form-group">
-                            <p v-if="success" class="success-message">Succes Login</p>
-                         </div>
-                         <div class="form-group">
-                            <button class="btn btn-primary btn-sm"  @click="save">{{ changeTitle }}</button>
+                      <div v-if="isLoggedIn == false" >
+                        <div v-if="error" class="alert alert-danger">
+                            <Strong>Error ! </Strong>{{ error_message }}
                         </div>
-                      </div>  
-                      <div v-if="type == 2">
+                        <div v-if="type == 0">                           
+                            <div class="form-group">
+                                <label for="">Nama</label>
+                                <input type="text" class="form-control" :class="{'is-invalid' : valName }" v-model="name" v-on:keypress="isLetter($event)">
+                                <p v-if="valName" class="error-message">The name is required</p>
+                            </div>
+                        </div>                      
+                        <div v-if="type == 0 || type == 1">
+                          <div class="form-group">
+                              <label for="">Email</label>
+                              <input type="email" class="form-control" :class="{'is-invalid' : valEmail }" v-model="email">
+                              <p v-if="valEmail" class="error-message">The Email is not right formats</p>
+                           </div>
+                           <div class="form-group">
+                              <label for="">Password</label>
+                              <input type="password" class="form-control" :class="{'is-invalid' : valPass }" v-model="password">
+                              <p v-if="valPass" class="error-message">The password is required, minimum 8 character</p>
+                           </div>                           
+                           <div class="form-group">
+                              <button class="btn btn-primary btn-sm"  @click="save">{{ changeTitle }}</button>
+                          </div>
+                        </div> 
+                      </div>                       
+                      <div v-if="isLoggedIn">
                         <div class="form-group">
                             <label for="search_username">Search Name</label>
                             <template>
@@ -92,7 +91,15 @@
                                     </ul>
                                 </div>                                
                             </template>     
-                            <p>Refresh the browser first to see the new registered user</p>                       
+                            <p>Refresh the browser first to see the new registered user</p>     
+                            <div class="form-group">
+                                <button class="btn btn-primary btn-sm"  
+                                @click="isLoggedIn = false
+                                        success = false
+                                        type=''">
+                                    Logout
+                                </button>
+                            </div>                  
                         </div>
                       </div>               
                    </div>
@@ -127,14 +134,21 @@
                 search: '',
                 results: [],
                 isOpen: false,
-                success: false,
+                error: false,
+                error_message : '',
+                isLoggedIn : false
             }},
             created: function() {
                 this.getNames()                
             },            
             methods: {
                 save(){
-                    this.type == 0  ? this.registerUser() : this.login()
+                    this.getNames()
+                    if(this.type == 0){
+                        this.registerUser()
+                    }else{
+                        this.login()                        
+                    }                    
                 },
                 getNames(){
                     axios.get('https://floating-beyond-43009.herokuapp.com/api/getUsers')
@@ -158,9 +172,13 @@
                         .then(res => {
                             this.resetForm()
                             this.type = 1
+                            return true
                         })
                         .catch(err => {
-                            console.log(err)
+                            console.log(err.response.data)
+                            this.error = true
+                            this.error_message = err.response.data.errors
+                            return false
                         })
                 },
                 login(){
@@ -169,10 +187,15 @@
                             password: this.password                            
                         })
                         .then(res => {
-                            this.success = true
+                            this.isLoggedIn = true
+                            this.type = 2
+                            return true
                         })
                         .catch(err => {
-                            console.log(err)
+                            console.log(err.response.data)
+                            this.error = true
+                            this.error_message = err.response.data.errors
+                            return false
                         })
                 },
                 resetForm(){
